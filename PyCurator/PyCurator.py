@@ -17,6 +17,7 @@ version = "0.0.3"
 # Import libraries
 import os, glob
 import numpy as np
+from numpy import pi
 import pandas as pd
 import re # for regular expressions
 import openpyxl
@@ -517,6 +518,7 @@ def translate_element_list(element_list, sep = " "):
 # Web functions
 #################################
 
+# Function to check if web urls work
 def check_url(url_list):
     """Function to check if url can be reached
 
@@ -528,3 +530,61 @@ def check_url(url_list):
     """
     # Or < 400
     return [True if requests.get(url).status_code == 200 else False for url in url_list]
+
+
+#################################
+# Unit conversion
+#################################
+
+#-------------------------------------------------------------------------------
+# Function to convert pressure in dbar to meters water depth
+
+def pressure_to_depth(pressure, latitude):
+    """
+    Calculates depth in meters from pressure in dbars.
+
+    Parameters
+    ----------
+    pressure : array_like
+        pressure [db].
+    latitude : number or array_like
+          latitude in decimal degrees north [-90..+90].
+
+    Returns
+    -------
+    z : array_like
+        depth [meters]
+
+    References
+    ----------
+    .. [1] Fofonoff, P. and Millard, R.C. Jr UNESCO 1983. Algorithms for computation of fundamental properties of seawater. UNESCO Tech. Pap. in Mar. Sci., No. 44, 53 pp. http://unesdoc.unesco.org/images/0005/000598/059832eb.pdf
+
+    Notes
+    -----
+    Modifications: 92-04-06. Phil Morgan.
+                   99-06-25. Lindsay Pender, Fixed transpose of row vectors.
+
+    """
+    # Angle conversions.
+    deg2rad, rad2deg = pi / 180.0,  180.0 / pi
+
+    # Convert pressure and latitude to nparray
+    pressure, latitude = map(np.asanyarray, (pressure, latitude))
+
+    # Equation 25 on p28 of UNESCO 1983 report (https://repository.oceanbestpractices.org/handle/11329/109).
+    c = [9.72659, -2.2512e-5, 2.279e-10, -1.82e-15]
+    gam_dash = 2.184e-6
+
+    # Convert to absolute values
+    latitude = abs(latitude)
+    X = np.sin(latitude * deg2rad)
+    X = X * X
+
+    # Gravity
+    gravity = (9.780318 * (1.0 + (5.2788e-3 + 2.36e-5 * X) * X) +
+                gam_dash * 0.5 * pressure)
+    # Depth
+    depth = (((c[3] * pressure + c[2]) * pressure + c[1]) * pressure + c[0]) * pressure
+    
+    # Returns gravity corrected water depth in meters
+    return depth / gravity

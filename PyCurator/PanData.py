@@ -546,6 +546,17 @@ def data_type(dataframe):
 
     return data_types
 
+#-------------------------------------------------------------------------------
+# Correct lower and upper limit in parameter import table
+def correct_data_limits(imp_table):
+    """Function to correct lower and upper limit in parameter import table for particular units
+
+    Args:
+        imp_table (pandas.core.frame.DataFrame): parameter import table
+    """
+    # For % units set lower limit = 0 and upper limit to 100
+    imp_table.loc[(imp_table.Unit == '%'),'LowerLimit']='0'
+    imp_table.loc[(imp_table.Unit == '%'),'UpperLimit']='100'
 
 
 #-------------------------------------------------------------------------------
@@ -617,6 +628,10 @@ def get_imp_param(unmatched_param_df,
         if del_duplicates == True:
             imp_df = imp_df.drop_duplicates(subset = ['ParameterName', 'Abbreviation', 'Unit'],
                         keep = 'last').reset_index(drop = True)
+
+        # Correct lower and upper limit for percentage units
+        correct_data_limits(imp_df)
+
         # Save import dataframe as tab delimited file
         imp_df.to_csv(f'{file_path}{df_name}_ParamImp.txt', index=False, sep="\t", encoding='utf-8')
 
