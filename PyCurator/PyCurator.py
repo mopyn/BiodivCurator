@@ -442,34 +442,6 @@ def drop_na_rows(df, columns = None, drop = "all", reset_index = False):
     return df_new
 #-------------------------------------------------------------------------------
 
-###############################
-# Geodata functions
-###############################
-
-def geo_decimal(latitude, longitude, format = "d%°%m%'%S%''%H", decimals = 6):
-    """Function to convert geo location data into decimals
-
-    Args:
-        latitude (list): Latitude in degrees format
-        longitude (list): Longitude in degrees format
-        format (str): format of provided geo location. Defaults to "d%°%m%'%S%''%H".
-        decimals (int): Number of decimals for returned latitude and longitude. Defaults to 6.
-
-    Returns:
-        list: latitude and longitude in decimals
-    """
-    # Convert invalid formatting
-    # Convert " signs to ''
-    latitude = [x.replace("\"", "\'\'") for x in latitude]
-    longitude = [x.replace("\"", "\'\'") for x in longitude]
-
-    # Convert latitude and longitude from degree to decimal format
-    lat_dec = [round(string2latlon(lat, long, format).lat.decimal_degree, decimals) for lat, long in zip(latitude, longitude)]
-    long_dec = [round(string2latlon(lat, long, format).lon.decimal_degree, decimals) for lat, long in zip(latitude, longitude)]
-
-    return lat_dec, long_dec
-
-#-------------------------------------------------------------------------------
 
 #################################
 # Functions for chemistry dataset
@@ -535,6 +507,32 @@ def check_url(url_list):
 #################################
 # Unit conversion
 #################################
+
+
+# Function to convert geo location data into decimals
+def geo_decimal(latitude, longitude, format = "d%°%m%'%S%''%H", decimals = 6):
+    """Function to convert geo location data into decimals
+
+    Args:
+        latitude (list): Latitude in degrees format
+        longitude (list): Longitude in degrees format
+        format (str): format of provided geo location. Defaults to "d%°%m%'%S%''%H".
+        decimals (int): Number of decimals for returned latitude and longitude. Defaults to 6.
+
+    Returns:
+        list: latitude and longitude in decimals
+    """
+    # Convert invalid formatting
+    # Convert " signs to ''
+    latitude = [x.replace("\"", "\'\'") for x in latitude]
+    longitude = [x.replace("\"", "\'\'") for x in longitude]
+
+    # Convert latitude and longitude from degree to decimal format
+    lat_dec = [round(string2latlon(lat, long, format).lat.decimal_degree, decimals) for lat, long in zip(latitude, longitude)]
+    long_dec = [round(string2latlon(lat, long, format).lon.decimal_degree, decimals) for lat, long in zip(latitude, longitude)]
+
+    return lat_dec, long_dec
+
 
 #-------------------------------------------------------------------------------
 # Function to convert pressure in dbar to meters water depth

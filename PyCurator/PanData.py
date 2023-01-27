@@ -13,14 +13,14 @@ from functools import reduce
 import re
 from difflib import get_close_matches
 from decimal import Decimal # To handle scientific notations
+import requests # To download web content
 
 from PyCurator.PyCurator import PyCurator as pc
 ###############################
 
 #######################################
-# Load PANGAEA data from local database
+# Load PANGAEA parameters
 #######################################
-
 
 #-------------------------------------------------------------------------------
 # Load PANGAEA data from local database
@@ -54,6 +54,39 @@ def load_db(db_path, db_type = "parameter", cols = None):
 
     return db
 
+
+#-------------------------------------------------------------------------------
+# Function to download all up-to-date PANGAEA parameters
+def get_PanParameters(local_filepath):
+        """Function to load the complete up-to-date ist of PANGAEA parameters
+
+        Args:
+            local_filepath (str): local file path where the parameters will be stored
+                                  Example: C:\\Users\\...\\...\\
+
+        Returns:
+            pandas.core.frame.DataFrame:: parameters database
+        """
+        # Download parameters database from the web
+        # URL link to PANGAEA parameters
+        URL = "https://www.pangaea.de/lists/parameter/all-byname"
+        response = requests.get(URL)
+
+        # Save parameters as local file
+        open(f'{local_filepath}pangaea_parameters.txt', "wb").write(response.content)
+
+        # Load local parameter database
+        db = load_db(db_path = f'{local_filepath}',
+                db_type = "parameter",
+                cols = ["Parameter", "Unit"]
+                )
+        # Blank all na entries
+        db = db.fillna("")
+
+        # Display the latest entries of the database
+        print(db.tail(5))
+
+        return db
 
 
 #-------------------------------------------------------------------------------
