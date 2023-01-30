@@ -24,6 +24,8 @@ import openpyxl
 import requests
 from LatLon23 import string2latlon # for geodata conversions
 from mendeleev import element #https://pypi.org/project/mendeleev/
+from matplotlib import pyplot as plt
+import math # to round up values
 ###############################
 
 
@@ -157,7 +159,7 @@ def cols_with_char(dataframe, char = "<"):
     """Find all dataframe columns where values contain a certain substring
 
     Args:
-        dataframe pandas.core.frame.DataFrame): dataframe
+        dataframe (pandas.core.frame.DataFrame): dataframe
         char (str, optional): String contained in dataframe column. Defaults to "<".
 
     Returns:
@@ -586,3 +588,47 @@ def pressure_to_depth(pressure, latitude):
     
     # Returns gravity corrected water depth in meters
     return depth / gravity
+
+
+#################################
+# Plotting functions
+#################################
+
+#-------------------------------------------------------------------------------
+# Function to plot an overview of all numeric data in a dataframe
+def plot_data(dataframe, file_path, plot_name = "", ncols = 4):
+    """Function to plot an overview of all numeric data in a dataframe
+
+    Args:
+        dataframe (pandas.core.frame.DataFrame): pandas dataframe
+        plot_name (str, optional): Name of whole plot. Defaults to "".
+        ncols (int, optional): Number of plot subplot columns. Defaults to 4.
+
+        Example: plot_data(df_curated['CTD'], plot_name="CTD")
+    """
+
+    # Define subplot structure
+    plt.figure(figsize=(15, 12))
+    plt.subplots_adjust(hspace=0.5)
+    plt.suptitle(f'Dataset: {plot_name}', fontsize = 20)
+    
+    # Find numeric features only
+    cols = dataframe.select_dtypes(['number']).columns
+
+    # Loop over all numeric columns to plot each numeric feature
+    for n, col in enumerate(cols):
+        try:
+            # Add a new subplot iteratively
+            ax = plt.subplot(math.ceil(len(cols)/ncols), ncols, n + 1)
+            # Filter df and feature on the new subplot axis
+            dataframe[col].plot(ax=ax)
+            # Format the chart
+            ax.set_title(col.upper(), size=10)
+            ax.get_legend().remove()
+            ax.set_xlabel("")
+        except:
+            continue
+
+    # Save plot as pdf
+    plt.savefig(f'{file_path}\\{plot_name}.pdf') 
+
