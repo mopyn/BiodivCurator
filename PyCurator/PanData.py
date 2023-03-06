@@ -57,7 +57,7 @@ def load_db(db_path, db_type = "parameter", cols = None):
 
 #-------------------------------------------------------------------------------
 # Function to download all up-to-date PANGAEA parameters
-def get_PanParameters(local_filepath):
+def get_PanParameters(local_filepath, cols = ["Parameter", "Unit", "ID parameter"]):
         """Function to load the complete up-to-date ist of PANGAEA parameters
 
         Args:
@@ -78,7 +78,7 @@ def get_PanParameters(local_filepath):
         # Load local parameter database
         db = load_db(db_path = f'{local_filepath}',
                 db_type = "parameter",
-                cols = ["Parameter", "Unit"]
+                cols = cols
                 )
         # Blank all na entries
         db = db.fillna("")
@@ -636,8 +636,10 @@ def get_imp_param(unmatched_param_df,
 
         # Add parameter names
         imp_df.ParameterName = strip_comments(unmatched_param_df.columns, " \[#*.*")
-        # Add abbreviations
+        # Add abbreviations without commas
         imp_df.Abbreviation = abbreviate_species(strip_comments(unmatched_param_df.columns, " \[#*.*"))
+        # Remove commas from abbrevations
+        imp_df.Abbreviation = imp_df.Abbreviation.str.replace(",", "")
         # Add units
         imp_df.Unit = get_unit(unmatched_param_df.columns)
         # Add LowerLimit
@@ -669,3 +671,53 @@ def get_imp_param(unmatched_param_df,
         imp_df.to_csv(f'{file_path}{df_name}_ParamImp.txt', index=False, sep="\t", encoding='utf-8')
 
         return imp_df
+
+
+
+#-------------------------------------------------------------------------------
+# Replace parameter names with IDs
+def param_to_id(dataframe, database, dataset_name = "dataset"):
+    """This function replaces PANGAEA parameter names with their IDs. This enables the data import into the Editorial System
+
+    Args:
+        dataframe (pandas.core.frame.DataFrame): dataframe with parameters/headers to be replaced with IDs
+        database (pandas.core.frame.DataFrame): PANGAEA parameter database
+
+    Returns:
+        pandas.core.frame.DataFrame: Returns the dataframe with Parameter IDs + comments and the old parameter names stored in second row (needs to be removed for import)
+    """
+    # Create copy of dataframe
+    dataframe = dataframe.copy()
+
+    # Extract parameter and unit without comments as dataframe
+    param_search = pd.DataFrame({"param_unit": [re.split("\/\/", x)[0] for x in dataframe.columns]})
+
+    # Extract parameter comments (no comments will be empty entries)
+    comments = dataframe.columns.str.extract(pat='(\/\//*.*)').iloc[:,0].replace(np.nan,'',regex=True)
+
+    # Convert ID parameter from numeric to str to avoid return as float type later on
+    database["ID parameter"] = database["ID parameter"].astype(str)
+
+    # Create joined param_unit parameter for the database too to enable matching with param_unit
+    database["param_unit"] = database.Parameter + " [" + database.Unit + "]"
+
+    # Search for dataframe parameters based on param_unit in database and add matching parameter IDs
+    param_search = param_search.merge(database.loc[:, ["param_unit", "ID parameter"]], how = "left", on = "param_unit")
+    
+    # Replace any nan for parameter IDS not found with original header
+    param_search["ID parameter"] = param_search["ID parameter"].fillna(param_search['param_unit'])
+
+    # Insert spelled out parameters in first row of data table (for cross checking later on)
+    dataframe.loc[-1] = dataframe.columns
+    dataframe.index = dataframe.index + 1  # shifting index
+    dataframe = dataframe.sort_index()
+
+    # Rename headers with parameter IDs and comments only
+    dataframe.columns = [f'{id}{comment}' for id, comment in zip(param_search["ID parameter"], comments)]
+
+    # Show parameters for which no ID was found
+    if not all([isinstance(item, int) for item in dataframe.columns]):
+        print(f'No ID found for parameter in {dataset_name}:')
+        [print(x) for x in dataframe.columns if not re.findall("^[0-9]", x)]
+
+    return dataframe

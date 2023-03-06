@@ -7,9 +7,9 @@ A collection of useful functions to curate tabular data
 
 ###############################
 # Metadata
-author = "Michael Oellermann"
-last_updated = "2022-07-14"
-version = "0.0.3"
+Contributors = ["Michael Oellermann", "Kathrin Riemann-Campe"]
+last_updated = "2023-02-07"
+version = "0.0.4"
 ###############################
 
 
@@ -557,7 +557,8 @@ def pressure_to_depth(pressure, latitude):
 
     References
     ----------
-    .. [1] Fofonoff, P. and Millard, R.C. Jr UNESCO 1983. Algorithms for computation of fundamental properties of seawater. UNESCO Tech. Pap. in Mar. Sci., No. 44, 53 pp. http://unesdoc.unesco.org/images/0005/000598/059832eb.pdf
+    [1] Fofonoff, P. and Millard, R.C. Jr UNESCO 1983. Algorithms for computation of fundamental properties of seawater. UNESCO Tech. Pap. in Mar. Sci., No. 44, 53 pp. http://unesdoc.unesco.org/images/0005/000598/059832eb.pdf
+    [2] Fernandes (2014). python-seawater v3.3.2 (v3.3.2). Zenodo. https://doi.org/10.5281/zenodo.11395
 
     Notes
     -----
